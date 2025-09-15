@@ -5,6 +5,8 @@ Created on Fri Jul 18 17:03:08 2025
 @author: Mateus Francisco
 """
 
+#%% Imports
+
 import os
 import pandas as pd
 import xarray as xr
@@ -15,6 +17,8 @@ import matplotlib.pyplot as plt
 from scipy.stats import linregress
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+
+#%% Configurações iniciais
 
 # Selecionar variável
 VARIAVEL = 'SST'
@@ -142,20 +146,20 @@ def robust_sym_limits(arr, pct=98):
 
 #%% Tendências linear reestruturada
 
-tco2_m = tco2.copy()
-tco2_m = tco2_m.assign_coords(time=("time", np.arange(tco2_m.sizes["time"])))  # 0..467 (meses)
+# tco2_m = tco2.copy()
+# tco2_m = tco2_m.assign_coords(time=("time", np.arange(tco2_m.sizes["time"])))  # 0..467 (meses)
 
-fit = tco2.polyfit(dim="time", deg=1)
-slope_m = fit.polyfit_coefficients.sel(degree=1)   # var / mês
-annual_slope = slope_m * 12                              # var / ano
+# fit = tco2.polyfit(dim="time", deg=1)
+# slope_m = fit.polyfit_coefficients.sel(degree=1)   # var / mês
+# annual_slope = slope_m * 12                              # var / ano
 
-r_time = pd.DataFrame(tco2_m['time'])
+# r_time = pd.DataFrame(tco2_m['time'])
 
-print("Valor mínimo:", float(annual_slope.min().values))
-print("Valor máximo:", float(annual_slope.max().values))
+# print("Valor mínimo:", float(annual_slope.min().values))
+# print("Valor máximo:", float(annual_slope.max().values))
 
-slope_min = float(annual_slope.min().values)
-slope_max = float(annual_slope.max().values)
+# slope_min = float(annual_slope.min().values)
+# slope_max = float(annual_slope.max().values)
 
 #%% Função de plotagem
 
