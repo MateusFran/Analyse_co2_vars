@@ -1,1 +1,28 @@
-/Data
+## Diretórios de dados e resultados
+Data/
+
+## Arquivos temporários e de ambiente
+*.pyc
+__pycache__/
+.env
+.venv/
+env/
+venv/
+
+## IDEs e configurações
+.vscode/
+.idea/
+
+## Arquivos de log e saída
+*.log
+*.out
+
+## Arquivos de notebook
+*.ipynb_checkpoints
+
+## Arquivos de sistema
+Thumbs.db
+.DS_Store
+
+## Outros
+*.bak
