@@ -1,8 +1,11 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import numpy as np
 import xarray as xr
 from ClimOcean.climocean import ClimOcean
 import cmocean.cm as cmo
-import os
 
 # Load dataset
 file_path = r'D:\Users\Mateus Francisco\OneDrive\Documentos\UFPE\Artigos\artigo_sdena_co2\Data\DIATO_cmems_obs-oc_glo_bgc-plankton_my_l4-multi-4km_P1M_1757962746741.nc'
@@ -16,10 +19,10 @@ variable = 'DIATO'
 latitude = ds['latitude']
 longitude = ds['longitude']
 extent = [-70, -40, -60, -30]
-colormap = 'turbo'
+colormap = 'jet'
 colorbar_label = 'mg m$^{-3}$'
 vmin = 0
-vmax = 5
+vmax = 3
 
 # Output directory for seasonal means
 output_dir = r'D:\Users\Mateus Francisco\OneDrive\Documentos\UFPE\Artigos\artigo_sdena_co2\Results\Seasonal_mean'
