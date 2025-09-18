@@ -13,7 +13,7 @@ class ClimOcean:
     def plot_map(self, data, lat, lon, title, cmap, cbar_label,
                  vmin=None, vmax=None, extent=None, savepath=None,
                  add_contours=True, contour_levels=20, contour_color='k',
-                 contour_linewidth=0.5, contour_labels=False, contour_fmt="%.1f",
+                 contour_linewidth=0.2, contour_labels=False, contour_fmt="%.1f",
                  aspect='auto', levels=20):
         
         fig = plt.figure(figsize=(10,6))
@@ -100,6 +100,83 @@ class ClimOcean:
         for season, months in months_seasons.items():
             result[season] = self.ds[var].sel(time=self.ds['time.month'].isin(months)).mean(dim="time")
         return result
+
+    def plot_seasonal_combined(self, var, lat, lon, cmap, cbar_label,
+                              vmin=None, vmax=None, extent=None, savepath=None,
+                              add_contours=False, levels=20, aspect='equal'):
+        """
+        Plot all 4 seasons in a single figure (2x2 grid)
+        """
+        seasonal_data = self.get_seasonal_climatology(var)
+        
+        # Season order and labels
+        seasons = ['Summer', 'Autumn', 'Winter', 'Spring']
+        season_labels = ['DJF', 'MAM', 'JJA', 'SON']
+        
+        fig = plt.figure(figsize=(14, 10))
+        fig.suptitle('Chlorophyll Concentration', fontsize=16, fontweight='bold', y=0.95)
+        
+        for i, (season, label) in enumerate(zip(seasons, season_labels)):
+            ax = plt.subplot(2, 2, i+1, projection=ccrs.PlateCarree())
+            
+            if extent is not None:
+                ax.set_extent(extent, crs=ccrs.PlateCarree())
+            ax.set_aspect(aspect)
+            
+            # Map features
+            ax.coastlines(resolution="110m", linewidth=1)
+            ax.add_feature(cfeature.BORDERS, linewidth=0.5)
+            ax.add_feature(cfeature.LAND, facecolor="lightgrey")
+            
+            # Gridlines - show labels only on left and bottom edges
+            gl = ax.gridlines(draw_labels=True, x_inline=False, y_inline=False)
+            gl.top_labels = False
+            gl.right_labels = False
+            gl.xlocator = plt.MultipleLocator(10)
+            gl.ylocator = plt.MultipleLocator(5)
+            
+            # Show lat/lon labels only on appropriate edges
+            if i in [0, 2]:  # Left column
+                gl.left_labels = True
+            else:
+                gl.left_labels = False
+                
+            if i in [2, 3]:  # Bottom row
+                gl.bottom_labels = True
+            else:
+                gl.bottom_labels = False
+            
+            # Plot data
+            im = seasonal_data[season].plot(
+                ax=ax,
+                transform=ccrs.PlateCarree(),
+                cmap=cmap,
+                levels=levels,
+                vmin=vmin, vmax=vmax,
+                add_colorbar=False
+            )
+            
+            # Contours if requested
+            if add_contours:
+                contours = ax.contour(
+                    lon, lat, seasonal_data[season],
+                    levels=levels,
+                    colors='k',
+                    linewidths=0.2,
+                    transform=ccrs.PlateCarree()
+                )
+            
+            ax.set_title(f'{label}', fontsize=14, fontweight='bold')
+        
+        # Add colorbar with adjusted spacing
+        plt.subplots_adjust(bottom=0.15, right=0.85, wspace=0, hspace=0.15, top=0.9)
+        cbar_ax = fig.add_axes([0.87, 0.2, 0.02, 0.6])
+        cbar = plt.colorbar(im, cax=cbar_ax)
+        cbar.set_label(cbar_label, fontsize=12)
+        
+        if savepath is not None:
+            plt.savefig(savepath, dpi=300, bbox_inches="tight")
+        plt.show()
 
     @staticmethod
     def robust_sym_limits(arr, pct=98):
