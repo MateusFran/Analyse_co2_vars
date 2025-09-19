@@ -178,6 +178,82 @@ class ClimOcean:
             plt.savefig(savepath, dpi=300, bbox_inches="tight")
         plt.show()
 
+    def get_trend(self, var):
+        """
+        Calculate linear trend over time for a variable.
+        Returns the slope (trend per year) as xarray DataArray.
+        """
+        # Create time coordinate as numeric (years since start)
+        data_copy = self.ds[var].copy()
+        
+        # Assign numeric time coordinates (0, 1, 2, ... representing months)
+        time_months = np.arange(len(data_copy.time))
+        data_copy = data_copy.assign_coords(time=time_months)
+        
+        # Calculate linear trend using polyfit
+        trend = data_copy.polyfit(dim='time', deg=1, skipna=True)
+        slope_per_month = trend.polyfit_coefficients.sel(degree=1)
+        
+        # Convert from per-month to per-year (12 months = 1 year)
+        slope_per_year = slope_per_month * 12
+        
+        return slope_per_year
+
+    def plot_trend(self, var, lat, lon, cmap, cbar_label, title=None,
+                   vmin=None, vmax=None, extent=None, savepath=None,
+                   add_contours=False, levels=20, aspect='equal'):
+        """
+        Plot linear trend of a variable over time.
+        """
+        trend_data = self.get_trend(var)
+        
+        fig = plt.figure(figsize=(10, 6))
+        ax = plt.subplot(111, projection=ccrs.PlateCarree())
+        
+        if extent is not None:
+            ax.set_extent(extent, crs=ccrs.PlateCarree())
+        ax.set_aspect(aspect)
+        
+        # Map features
+        ax.coastlines(resolution="110m", linewidth=1)
+        ax.add_feature(cfeature.BORDERS, linewidth=0.5)
+        ax.add_feature(cfeature.LAND, facecolor="lightgrey")
+        
+        # Gridlines
+        gl = ax.gridlines(draw_labels=True, x_inline=False, y_inline=False)
+        gl.top_labels = False
+        gl.right_labels = False
+        gl.xlocator = plt.MultipleLocator(10)
+        gl.ylocator = plt.MultipleLocator(5)
+        
+        # Plot trend data
+        im = trend_data.plot(
+            ax=ax,
+            transform=ccrs.PlateCarree(),
+            cmap=cmap,
+            levels=levels,
+            vmin=vmin, vmax=vmax,
+            cbar_kwargs={"label": cbar_label, "shrink": 1, "aspect": 20, "pad": 0.05}
+        )
+        
+        # Contours if requested
+        if add_contours:
+            contours = ax.contour(
+                lon, lat, trend_data,
+                levels=levels,
+                colors='k',
+                linewidths=0.2,
+                transform=ccrs.PlateCarree()
+            )
+        
+        # Set title
+        plot_title = title if title is not None else f'{var} Linear Trend'
+        plt.title(plot_title, fontsize=14, fontweight='bold')
+        
+        if savepath is not None:
+            plt.savefig(savepath, dpi=300, bbox_inches="tight")
+        plt.show()
+
     @staticmethod
     def robust_sym_limits(arr, pct=98):
         a = np.asarray(arr)
